@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Архитектонски Квиз за Недвижности</title>
+  <title>Golden Art Quiz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -102,7 +102,6 @@
     }
     .option-card:hover .check-circle { background-color: black; border-color: black; }
 
-    /* Faster transitions to remove perceived delay */
     #question-text, #question-subtext, #options-grid { transition: opacity 120ms ease; }
   </style>
 </head>
@@ -154,7 +153,8 @@
         </div>
 
         <h2 id="question-text" class="text-3xl md:text-4xl font-bold mb-5 leading-tight text-gray-900 min-h-[80px]"></h2>
-        <p id="question-subtext" class="text-gray-500 font-light mb-6 hidden"></p>
+        <!-- Subtext intentionally kept but always hidden per request -->
+        <p id="question-subtext" class="hidden"></p>
 
         <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full"></div>
       </div>
@@ -209,7 +209,6 @@
   </main>
 
   <script>
-    // Quiz Data (6 questions) + conditional logic for Q2 and Q3
     const questions = [
       {
         question: "1. За каков тип на недвижност сте заинтересирани?",
@@ -217,27 +216,13 @@
       },
       {
         question: "2. Кoja локација ви одговара?",
-        subtext: "(Покажуваме само соодветни опции според изборот од Прашање 1)",
         conditional: true,
-        optionsApartment: [
-          "Скопје - Треска",
-          "Скопје - Ентрада",
-          "Охрид - Парк Охрид",
-          "Не сум сигурен, сакам препорака",
-        ],
-        optionsBusiness: [
-          "Скопје - Треска",
-          "Скопје - Каредо",
-          "Скопје - 4 Степени",
-          "Скопје - Ентрада",
-          "Охрид - Парк Охрид",
-          "Не сум сигурен, сакам препорака",
-        ],
+        optionsApartment: ["Скопје - Треска", "Скопје - Ентрада", "Охрид - Парк Охрид", "Не сум сигурен, сакам препорака"],
+        optionsBusiness: ["Скопје - Треска", "Скопје - Каредо", "Скопје - 4 Степени", "Скопје - Ентрада", "Охрид - Парк Охрид", "Не сум сигурен, сакам препорака"],
         optionsFallback: ["Не сум сигурен, сакам препорака"],
       },
       {
         question: "3. Каков тип простор барате?",
-        subtext: "(Покажуваме само соодветни опции според изборот од Прашање 1)",
         conditional: true,
         optionsApartment: ["Гарсоњера", "Еднособен", "Двособен", "Трособен", "Четирисобен"],
         optionsBusiness: ["Локал", "Изложбен салон", "Канцеларија", "Магацински простор"],
@@ -257,7 +242,7 @@
       },
     ];
 
-    let currentStep = 0; // 0=Start, 1..6=Questions, 7=Contact, 8=Success
+    let currentStep = 0;
     let answers = [];
     let isTransitioning = false;
 
@@ -273,7 +258,6 @@
     const optionsGrid = document.getElementById("options-grid");
     const currentQNum = document.getElementById("current-q-num");
     const totalQNum = document.getElementById("total-q-num");
-    const backBtn = document.getElementById("back-btn");
 
     totalQNum.innerText = questions.length;
 
@@ -293,43 +277,32 @@
 
     function getOptionsForIndex(index) {
       const q = questions[index];
-
       if (q.conditional) {
         const type = getTypeFromQ1();
         if (type === "apartment") return q.optionsApartment || q.optionsFallback || [];
         if (type === "business") return q.optionsBusiness || q.optionsFallback || [];
         return q.optionsFallback || [];
       }
-
       return q.options || [];
     }
 
-    // No artificial timeout: update immediately on next animation frame
     function loadQuestion(index, immediate) {
       const progress = ((index + 1) / questions.length) * 100;
       progressBar.style.width = `${progress}%`;
       currentQNum.innerText = index + 1;
 
-      // Back button behavior: if on first question, back goes to start
-      backBtn.innerText = (index === 0) ? "НАЗАД" : "НАЗАД";
+      // Subtext must never be visible
+      questionSubtext.classList.add("hidden");
+      questionSubtext.innerText = "";
 
       if (!immediate) {
         questionText.style.opacity = 0;
         optionsGrid.style.opacity = 0;
-        questionSubtext.style.opacity = 0;
       }
 
       const render = () => {
         const q = questions[index];
         questionText.innerText = q.question;
-
-        if (q.subtext) {
-          questionSubtext.classList.remove("hidden");
-          questionSubtext.innerText = q.subtext;
-        } else {
-          questionSubtext.classList.add("hidden");
-          questionSubtext.innerText = "";
-        }
 
         const opts = getOptionsForIndex(index);
         optionsGrid.innerHTML = "";
@@ -350,19 +323,13 @@
           optionsGrid.appendChild(btn);
         });
 
-        // Fade back in quickly
         requestAnimationFrame(() => {
           questionText.style.opacity = 1;
           optionsGrid.style.opacity = 1;
-          if (!questionSubtext.classList.contains("hidden")) questionSubtext.style.opacity = 1;
         });
       };
 
-      if (immediate) {
-        render();
-        return;
-      }
-
+      if (immediate) return render();
       requestAnimationFrame(render);
     }
 
@@ -375,28 +342,24 @@
       if (currentStep < questions.length) {
         currentStep++;
         loadQuestion(currentStep - 1, false);
-        // release lock fast, without delaying UX
-        setTimeout(() => { isTransitioning = false; }, 140);
       } else {
         finishQuiz();
-        setTimeout(() => { isTransitioning = false; }, 140);
       }
+
+      setTimeout(() => { isTransitioning = false; }, 140);
     }
 
     function goBack() {
       if (isTransitioning) return;
       isTransitioning = true;
 
-      // If we're on question 1 (index 0), go back to start screen
       if (currentStep === 1) {
         resetQuiz();
         setTimeout(() => { isTransitioning = false; }, 140);
         return;
       }
 
-      // Otherwise, go to previous question
       if (currentStep > 1) {
-        // remove last answer
         answers.pop();
         currentStep--;
         loadQuestion(currentStep - 1, false);
@@ -456,7 +419,6 @@
         to.classList.add("active-step");
 
         void to.offsetWidth;
-
         to.style.opacity = "1";
       }, 220);
     }
