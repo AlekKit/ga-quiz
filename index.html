@@ -147,7 +147,7 @@
       <div id="quiz-container" class="hidden-step flex-col h-full py-2">
         <div class="mb-6 flex justify-between items-end">
           <span class="text-xs font-bold tracking-[0.2em] text-black/40 uppercase block mb-2">
-            Прашање <span id="current-q-num">1</span>/<span id="total-q-num">6</span>
+            Прашање <span id="current-q-num">1</span>/<span id="total-q-num">5</span>
           </span>
           <button id="back-btn" onclick="goBack()" class="text-xs text-black/30 hover:text-black transition-colors">НАЗАД</button>
         </div>
@@ -222,22 +222,15 @@
         optionsFallback: ["Не сум сигурен, сакам препорака"],
       },
       {
-        question: "3. Каков тип простор барате?",
-        conditional: true,
-        optionsApartment: ["Гарсоњера", "Еднособен", "Двособен", "Трособен", "Четирисобен"],
-        optionsBusiness: ["Локал", "Изложбен салон", "Канцеларија", "Магацински простор"],
-        optionsFallback: ["Сакам препорака"],
-      },
-      {
-        question: "4. Кој опсег на големина го преферирате?",
+        question: "3. Кој опсег на големина го преферирате?",
         options: ["Под 40 m²", "40-60 m²", "60-80 m²", "80-120 m²", "120+ m²"],
       },
       {
-        question: "5. Кога планирате да купите?",
+        question: "4. Кога планирате да купите?",
         options: ["Во следниве 30 дена", "Во следниве 3 месеци", "Во следниве 6 месеци", "Подоцна / само истражувам"],
       },
       {
-        question: "6. Кој е вашиот приближен буџет?",
+        question: "5. Кој е вашиот приближен буџет?",
         options: ["Под 70.000 €", "70.000 - 100.000 €", "100.000 - 150.000 €", "150.000 - 200.000 €", "Над 200.000 €"],
       },
     ];
@@ -368,59 +361,38 @@
       setTimeout(() => { isTransitioning = false; }, 140);
     }
 
+    function switchView(fromEl, toEl) {
+      fromEl.classList.remove("active-step");
+      fromEl.classList.add("hidden-step");
+      toEl.classList.remove("hidden-step");
+      toEl.classList.add("active-step");
+    }
+
+    function resetQuiz() {
+      progressContainer.classList.add("hidden");
+      progressBar.style.width = "0%";
+      currentStep = 0;
+      answers = [];
+      switchView(quizContainer, stepStart);
+    }
+
     function finishQuiz() {
       switchView(quizContainer, stepContact);
-      progressBar.style.width = "100%";
     }
 
     function submitForm(e) {
       e.preventDefault();
 
-      const btn = e.target.querySelector("button[type='submit']");
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = "<span class='animate-pulse'>Обработка...</span>";
-      btn.disabled = true;
+      const payload = {
+        fullName: document.getElementById("fullName").value,
+        phone: document.getElementById("phone").value,
+        email: document.getElementById("email").value,
+        answers: answers,
+      };
 
-      setTimeout(() => {
-        switchView(stepContact, stepSuccess);
-        progressContainer.classList.add("hidden");
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
-      }, 900);
-    }
+      console.log("SUBMISSION:", payload);
 
-    function resetQuiz() {
-      answers = [];
-      currentStep = 0;
-      progressBar.style.width = "0%";
-      progressContainer.classList.add("hidden");
-
-      quizContainer.classList.remove("active-step");
-      quizContainer.classList.add("hidden-step");
-      stepContact.classList.remove("active-step");
-      stepContact.classList.add("hidden-step");
-      stepSuccess.classList.remove("active-step");
-      stepSuccess.classList.add("hidden-step");
-
-      stepStart.classList.remove("hidden-step");
-      stepStart.classList.add("active-step");
-    }
-
-    function switchView(from, to) {
-      from.style.opacity = "0";
-      from.style.transform = "translateY(-10px)";
-
-      setTimeout(() => {
-        from.classList.remove("active-step");
-        from.classList.add("hidden-step");
-        from.style.transform = "";
-
-        to.classList.remove("hidden-step");
-        to.classList.add("active-step");
-
-        void to.offsetWidth;
-        to.style.opacity = "1";
-      }, 220);
+      switchView(stepContact, stepSuccess);
     }
   </script>
 </body>
