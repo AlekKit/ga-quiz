@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Golden Art Quiz</title>
+  <title>Golden Art Get Offer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -235,7 +235,7 @@ src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
       {
         question: "2. Кoja локација ви одговара?",
         conditional: true,
-        optionsApartment: ["Скопје - Треска", "Скопје - Ентрада", "Охрид - Парк Охрид", "Не сум сигурен, сакам препорака"],
+        optionsApartment: ["Скопје - Треска", "Охрид - Парк Охрид", "Не сум сигурен, сакам препорака"],
         optionsBusiness: ["Скопје - Треска", "Скопје - Каредо", "Скопје - 4 Степени", "Скопје - Ентрада", "Охрид - Парк Охрид", "Не сум сигурен, сакам препорака"],
         optionsFallback: ["Не сум сигурен, сакам препорака"],
       },
@@ -409,6 +409,11 @@ src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
       };
 
       console.log("SUBMISSION:", payload);
+
+      // Meta Pixel standard event (Lead) - added only
+      if (window.fbq) {
+        fbq('track', 'Lead');
+      }
 
       switchView(stepContact, stepSuccess);
     }
