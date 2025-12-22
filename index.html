@@ -10,23 +10,23 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;700;800&display=swap" rel="stylesheet" />
 
   <!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1863325784270692');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
-  
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1863325784270692');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Code -->
+
   <script>
     tailwind.config = {
       theme: {
@@ -171,7 +171,6 @@ src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
         </div>
 
         <h2 id="question-text" class="text-3xl md:text-4xl font-bold mb-5 leading-tight text-gray-900 min-h-[80px]"></h2>
-        <!-- Subtext intentionally kept but always hidden per request -->
         <p id="question-subtext" class="hidden"></p>
 
         <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full"></div>
@@ -302,7 +301,6 @@ src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
       progressBar.style.width = `${progress}%`;
       currentQNum.innerText = index + 1;
 
-      // Subtext must never be visible
       questionSubtext.classList.add("hidden");
       questionSubtext.innerText = "";
 
@@ -398,54 +396,56 @@ src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
       switchView(quizContainer, stepContact);
     }
 
+    function getParam(name) {
+      const p = new URLSearchParams(location.search);
+      return p.get(name) || "";
+    }
+
+    function sendToSheetsJSON(webAppUrl, payloadObj) {
+      try {
+        const blob = new Blob([JSON.stringify(payloadObj)], { type: "text/plain;charset=UTF-8" });
+        navigator.sendBeacon(webAppUrl, blob);
+      } catch (e) {
+        fetch(webAppUrl, {
+          method: "POST",
+          mode: "no-cors",
+          keepalive: true,
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body: JSON.stringify(payloadObj)
+        }).catch(() => {});
+      }
+    }
+
     function submitForm(e) {
       e.preventDefault();
 
+      const fullName = document.getElementById("fullName").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+
       const payload = {
-        fullName: document.getElementById("fullName").value,
-        phone: document.getElementById("phone").value,
-        email: document.getElementById("email").value,
-        answers: answers,
-      };
-
-      console.log("SUBMISSION:", payload);
-
-      // Google Sheets (Apps Script Web App) submission
-      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyhBwCcy1S5V9QLcHk_ZXX-CUJckNPj6Kj4JjxfEkm-G-qeme54PIUduH-ottpQS6vrQg/exec";
-
-      const params = new URLSearchParams(location.search);
-      const bodyObj = {
         timestamp: new Date().toISOString(),
+        full_name: fullName,
+        email: email,
+        phone: phone,
+        answers: answers,
 
-        // send both variants so it works with different scripts
-        fullName: payload.fullName,
-        phone: payload.phone,
-        email: payload.email,
-        full_name: payload.fullName,
-        phone_number: payload.phone,
-
-        answers: payload.answers,
+        utm_source: getParam("utm_source"),
+        utm_medium: getParam("utm_medium"),
+        utm_campaign: getParam("utm_campaign") || "quiz",
+        utm_content: getParam("utm_content"),
+        utm_term: getParam("utm_term"),
 
         page: location.href,
         userAgent: navigator.userAgent,
-        referrer: document.referrer || "",
-
-        // optional utm fields if present
-        utm_source: params.get("utm_source") || "",
-        utm_medium: params.get("utm_medium") || "",
-        utm_campaign: params.get("utm_campaign") || "",
-        utm_content: params.get("utm_content") || "",
-        utm_term: params.get("utm_term") || ""
+        referrer: document.referrer || ""
       };
 
-      fetch(WEB_APP_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(bodyObj)
-      }).catch(err => console.log("Sheets submit error:", err));
+      sendToSheetsJSON(
+        "https://script.google.com/macros/s/AKfycbzqDQcbx5QhzwOD83U12f5cf7qkyxFpHjOW1tMukdh97s9l9i9qwLOs-_RowtpKxHCk0Q/exec",
+        payload
+      );
 
-      // Meta Pixel standard event (Lead)
       if (window.fbq) {
         fbq("track", "Lead");
       }
