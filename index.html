@@ -411,24 +411,43 @@ src="https://www.facebook.com/tr?id=1863325784270692&ev=PageView&noscript=1"
       console.log("SUBMISSION:", payload);
 
       // Google Sheets (Apps Script Web App) submission
-      fetch("https://script.google.com/macros/s/AKfycbyhBwCcy1S5V9QLcHk_ZXX-CUJckNPj6Kj4JjxfEkm-G-qeme54PIUduH-ottpQS6vrQg/exec", {
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyhBwCcy1S5V9QLcHk_ZXX-CUJckNPj6Kj4JjxfEkm-G-qeme54PIUduH-ottpQS6vrQg/exec";
+
+      const params = new URLSearchParams(location.search);
+      const bodyObj = {
+        timestamp: new Date().toISOString(),
+
+        // send both variants so it works with different scripts
+        fullName: payload.fullName,
+        phone: payload.phone,
+        email: payload.email,
+        full_name: payload.fullName,
+        phone_number: payload.phone,
+
+        answers: payload.answers,
+
+        page: location.href,
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || "",
+
+        // optional utm fields if present
+        utm_source: params.get("utm_source") || "",
+        utm_medium: params.get("utm_medium") || "",
+        utm_campaign: params.get("utm_campaign") || "",
+        utm_content: params.get("utm_content") || "",
+        utm_term: params.get("utm_term") || ""
+      };
+
+      fetch(WEB_APP_URL, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          timestamp: new Date().toISOString(),
-          fullName: payload.fullName,
-          phone: payload.phone,
-          email: payload.email,
-          answers: payload.answers,
-          page: location.href,
-          userAgent: navigator.userAgent,
-          referrer: document.referrer || ""
-        })
+        body: JSON.stringify(bodyObj)
       }).catch(err => console.log("Sheets submit error:", err));
 
-      // Meta Pixel standard event (Lead) - added only
+      // Meta Pixel standard event (Lead)
       if (window.fbq) {
-        fbq('track', 'Lead');
+        fbq("track", "Lead");
       }
 
       switchView(stepContact, stepSuccess);
